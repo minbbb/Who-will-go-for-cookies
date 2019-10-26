@@ -22,24 +22,30 @@ def cookie(update, context):
 			context.bot.send_message(chat_id=update.message.chat_id, text="So it will not work, I need /cookie and names separated by a space (example - /cooke name1 name2)")
 		return
 	if context.args is None:
-		res = random.choice(update.message.text.split())
+		res = getResult(update.message.text.split(), update.message.from_user.language_code)
 	else:
-		res = random.choice(context.args)
-	if update.message.from_user.language_code == "ru":
-		res = random.choice(variationsRU).format(res)
-	else:
-		res = random.choice(variationsEN).format(res)
+		res = getResult(context.args, update.message.from_user.language_code)
 	context.bot.send_message(chat_id=update.message.chat_id, text=res)
 
 def inlinequery(update, context):
 	if update.inline_query.query != "":
-		query = update.inline_query.query.split()
-		res = random.choice(query)
-		if update.inline_query.from_user.language_code == "ru":
-			res = random.choice(variationsRU).format(res)
-		else:
-			res = random.choice(variationsEN).format(res)
+		res = getResult(update.inline_query.query.split(), update.inline_query.from_user.language_code)
 		update.inline_query.answer([InlineQueryResultArticle(id=uuid4(), title="🍪 Choose your fighter", input_message_content=InputTextMessageContent(res))], cache_time=1)
+
+def getResult(names, language_code = "ru"):
+	if language_code == "ru":
+		res = random.choice(variationsRU).format(random.choice(names))
+		candidates = "Кандидаты: "
+	else:
+		res = random.choice(variationsEN).format(random.choice(names))
+		candidates = "Candidates: "
+	for i, candidate in enumerate(names):
+		if i != 0:
+			candidates += ", "
+		candidates += candidate
+		if i == len(names) - 1:
+			candidates += "."
+	return candidates + "\n\n" + res
 
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('cookie', cookie))
